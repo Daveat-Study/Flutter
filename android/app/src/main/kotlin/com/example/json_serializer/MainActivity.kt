@@ -1,4 +1,4 @@
-package com.example.download_asset
+package com.example.json_serializer
 
 import io.flutter.embedding.android.FlutterActivity
 

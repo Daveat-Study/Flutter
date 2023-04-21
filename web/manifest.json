@@ -1,6 +1,6 @@
 {
-    "name": "download_asset",
-    "short_name": "download_asset",
+    "name": "json_serializer",
+    "short_name": "json_serializer",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
