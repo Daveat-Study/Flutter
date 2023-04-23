@@ -38,6 +38,7 @@ dependencies:
   path_provider: ^2.0.14
   http: ^0.13.5
   archive: ^3.3.7
+  path: ^1.8.2
 
 dev_dependencies:
   flutter_test:

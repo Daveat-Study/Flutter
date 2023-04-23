@@ -1,4 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:archive/archive.dart';
+import 'package:http/http.dart' as _http;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   runApp(const MyApp());
@@ -49,16 +55,84 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  String? _dir;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  String _api = "https://daveat-study.github.io/";
+
+  void _incrementCounter() async {
+    print("_incrementCounter");
+    
+    try {
+      // Get Application PATH
+      _dir = (await getApplicationDocumentsDirectory()).path;
+      print("_dir $_dir");
+
+      // Start Download File
+      await _downloadFile().then((value) async {
+        
+        print("value.readAsBytesSync() ${value.path} ");
+        // Start Archive Downloaded File
+
+        await _readFile(value);
+      });
+    } catch (e) {
+      print("Error _incrementCounter $e");
+    }
+  }
+
+  Future<File> _downloadFile() async {
+    print("_downloadFile");
+    _http.Response req;
+    File file = File('$_dir/logo.zip');
+    req = await _http.Client().get(Uri.parse("${_api}logo.zip"));
+    try {
+      print("start _downloadFile");
+
+      print("req ${req.bodyBytes}");
+
+      print("file ${file.path}");
+
+    } catch (e) {
+
+      print("Failed _downloadFile $e");
+    }
+    return await file.writeAsBytes(req.bodyBytes);
+  }
+
+  Future<void> readFileFromLocalDB() async {
+    
+    _dir = (await getApplicationDocumentsDirectory()).path;
+    print("_dir $_dir");
+    await _readFile(File("$_dir/logo.zip"), name: true);
+  }
+
+  Future<void> _readFile(File value, {bool? name = false}) async {
+
+    Archive archive = ZipDecoder().decodeBytes(value.readAsBytesSync());
+
+    // Loop Write File Into Local DB
+    for (var file in archive) {
+
+      // ${file.name}
+      var filename = '$_dir/${name == true ? file.name : 'logo'}';
+
+      if (file.isFile) {
+
+        var outFile = File(filename);
+        print("outFile $outFile");
+
+        // Create Folder
+        outFile = await outFile.create(recursive: true);
+
+        print("outFile.path ${outFile.path}");
+
+        print("file.content ${file.content}");
+        // Write File's Content As Byte
+        await outFile.writeAsBytes(file.content);
+
+      }
+      
+    }
   }
 
   @override
@@ -102,6 +176,20 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+
+            ElevatedButton(
+              onPressed: () {
+                _incrementCounter();
+              }, 
+              child: Text("Download File")
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                await readFileFromLocalDB();
+              }, 
+              child: Text("Read File")
+            )
           ],
         ),
       ),
